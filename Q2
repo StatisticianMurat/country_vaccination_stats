@@ -1,0 +1,35 @@
+import numpy as np
+import pandas as pd
+dat = pd.read_csv("country_vaccination_stats.csv")
+dat.head()
+dat.isnull().values.any()
+
+def fill_missing_vaccinations(dat):
+    min_vaccinations = dat.groupby("country")["daily_vaccinations"].min()
+    def impute_values(row):
+        if pd.isnull(row["daily_vaccinations"]):
+            country_min = min_vaccinations.get(row["country"])
+            if pd.isnull(country_min):
+                return 0
+            else:
+                return country_min
+        else:
+            return row["daily_vaccinations"]
+    
+    dat["daily_vaccinations"] = dat.apply(impute_values, axis=1)
+    
+    return dat
+
+dat_filled = fill_missing_vaccinations(dat)
+
+dat.head()
+dat.isnull().values.any()
+
+
+country_median_vaccinations = dat.groupby('country')['daily_vaccinations'].median().reset_index()
+
+sorted_dat = country_median_vaccinations.sort_values(by='daily_vaccinations', ascending=False)
+
+top_3_countries = sorted_dat.head(3)
+
+print(top_3_countries)
